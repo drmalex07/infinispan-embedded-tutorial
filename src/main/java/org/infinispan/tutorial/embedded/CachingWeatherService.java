@@ -17,11 +17,6 @@ public class CachingWeatherService implements WeatherService
     @Override
     final public LocationWeather getWeatherForLocation(String location)
     {
-        LocationWeather result = cache.get(location);
-        if (result == null) {
-            result = service.getWeatherForLocation(location);
-            cache.put(location, result);
-        }
-        return result;
+        return cache.computeIfAbsent(location, service::getWeatherForLocation);
     }
 }
