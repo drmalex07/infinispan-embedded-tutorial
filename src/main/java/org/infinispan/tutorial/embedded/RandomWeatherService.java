@@ -15,9 +15,8 @@ public class RandomWeatherService extends CachingWeatherService {
 
    @Override
    protected LocationWeather fetchWeather(String location) {
-      try {
-         TimeUnit.MILLISECONDS.sleep(200);
-      } catch (InterruptedException e) {}
+      //try { TimeUnit.MILLISECONDS.sleep(25); } 
+      //catch (InterruptedException e) {}
       String[] split = location.split(",");
       return new LocationWeather(random.nextFloat() * 20f + 5f, "sunny", split[1].trim());
    }
