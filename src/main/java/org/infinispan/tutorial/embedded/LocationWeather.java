@@ -2,19 +2,23 @@ package org.infinispan.tutorial.embedded;
 
 import java.io.Serializable;
 
-public class LocationWeather implements Serializable {
-   final float temperature;
+public class LocationWeather implements Serializable 
+{
+   final Double temperature;
+   final Double relativeHumidity;
    final String conditions;
-   final String country;
+   final String location;
 
-   public LocationWeather(float temperature, String conditions, String country) {
+   public LocationWeather(Double temperature, Double relativeHumidity, String conditions, String location) {
       this.temperature = temperature;
+      this.relativeHumidity = relativeHumidity;
       this.conditions = conditions;
-      this.country = country;
+      this.location = location;
    }
 
    @Override
    public String toString() {
-      return String.format("Temperature: %.1f° C, Conditions: %s", temperature, conditions);
+      return String.format("Location: [%s], Temperature: %.2f°C, Humidity: %.2f%%, Conditions: %s", 
+          location, temperature, relativeHumidity * 100.0, conditions);
    }
 }

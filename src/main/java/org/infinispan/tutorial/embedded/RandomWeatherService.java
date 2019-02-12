@@ -1,24 +1,25 @@
 package org.infinispan.tutorial.embedded;
 
+import java.io.Serializable;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 
-public class RandomWeatherService extends CachingWeatherService {
-   final Random random;
+public class RandomWeatherService implements Serializable, WeatherService
+{
+    private static final long serialVersionUID = 1L;
+    
+    private static final Random random = new Random();
 
-   public RandomWeatherService(Cache<String, LocationWeather> cache) {
-      super(cache);
-      random = new Random();
-   }
+    public RandomWeatherService() {}
 
-   @Override
-   protected LocationWeather fetchWeather(String location) {
-      //try { TimeUnit.MILLISECONDS.sleep(25); } 
-      //catch (InterruptedException e) {}
-      String[] split = location.split(",");
-      return new LocationWeather(random.nextFloat() * 20f + 5f, "sunny", split[1].trim());
-   }
-
+    @Override
+    public LocationWeather getWeatherForLocation(String location)
+    {
+        // try { TimeUnit.MILLISECONDS.sleep(25); }
+        // catch (InterruptedException e) {}
+        return new LocationWeather(random.nextDouble() * 20.0 + 0.5,
+            random.nextDouble() * 0.5 + 0.40, "sunny", location);
+    }
 }

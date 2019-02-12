@@ -102,13 +102,15 @@ public class WeatherApp {
 
     private WeatherService createWeatherService(Cache<String, LocationWeather> cache)
     {
+        WeatherService service = null;
         String apiKey = System.getenv("OWMAPIKEY");
         if (apiKey == null) {
             warn("OWMAPIKEY environment variable not set, using the RandomWeatherService.");
-            return new RandomWeatherService(cache);
+            service = new RandomWeatherService();
         } else {
-            return new OpenWeatherMapService(apiKey, cache);
+            service = new OpenWeatherMapService(apiKey);
         }
+        return new CachingWeatherService(cache, service);
     }
 
     public void shutdown()
@@ -172,17 +174,16 @@ public class WeatherApp {
         CacheContainerStats stats = cacheManager.getStats();
        
         System.out.printf(
-            " -- CLUSTER [%s] --%n" +
-            "  cluster: %s%n" +
-            "  node-name: %s%n" +
-            "  node-status: %s%n" +
-            "  coordinator: %s%n" +
-            "  stats.hit-ratio: %.2f%n" +
-            "  stats.number-of-entries: %d%n" +
-            "  stats.total-number-of-entries: %d%n" +
-            "  number-of-entries: %d%n" +
-            "  number-of-entries-in-node: %d%n" +
-            " --%n",
+            "cluster-name: %s%n" +
+            "cluster-members: %s%n" +
+            "node-name: %s%n" +
+            "node-status: %s%n" +
+            "coordinator: %s%n" +
+            "stats.hit-ratio: %.4f%n" +
+            "stats.number-of-entries: %d%n" +
+            "stats.total-number-of-entries: %d%n" +
+            "number-of-entries: %d%n" +
+            "number-of-entries-in-node: %d%n",
             cacheManager.getClusterName(),
             cacheManager.getMembers(),
             cacheManager.getAddress(),
@@ -192,7 +193,8 @@ public class WeatherApp {
             stats.getCurrentNumberOfEntries(),
             stats.getTotalNumberOfEntries(),
             cache.entrySet().size(),
-            cache.getAdvancedCache().withFlags(Flag.SKIP_REMOTE_LOOKUP).entrySet().size());
+            // see https://stackoverflow.com/questions/30019124/infinispan-distributed-mode-clustered-cache-quickstart
+            cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).entrySet().size());
     }
     
     private void seedFromFile(Path inputPath) throws IOException
@@ -204,8 +206,8 @@ public class WeatherApp {
                 count++;
                 String location = line.trim();
                 LocationWeather weather = weatherService.getWeatherForLocation(location);
-                if (count % 1000 == 0) {
-                    debug("Seeding... added {0} entries, now at {1}", count, weather.country);
+                if (count % 2500 == 0) {
+                    debug("Seeding... added {0} entries, now at: {1}", count, weather);
                 }
             }
             info("Seeded {0} entries from {1}", count, inputPath);
