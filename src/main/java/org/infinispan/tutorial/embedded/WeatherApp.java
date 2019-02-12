@@ -5,7 +5,6 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
@@ -14,6 +13,7 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.context.Flag;
+import org.infinispan.eviction.EvictionType;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.stats.CacheContainerStats;
@@ -41,6 +41,8 @@ import static java.util.stream.Collectors.joining;
 public class WeatherApp {
 
     private static final int INITIAL_CLUSTER_SIZE = 1; // usually >= 2
+    
+    private static final long MAX_SIZE = 125 * 1024;
     
     private static Logger logger = Logger.getLogger(WeatherApp.class.getName()); 
     
@@ -83,11 +85,15 @@ public class WeatherApp {
         listener = new SimpleClusterListener();
         cacheManager.addListener(listener);
         
+       
         Configuration cacheConfig = new ConfigurationBuilder()
             .expiration()
                 .lifespan(15, TimeUnit.MINUTES)
+            .memory()
+                .evictionType(EvictionType.COUNT)
+                .size(MAX_SIZE)
             .clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
+                .cacheMode(CacheMode.DIST_SYNC)    
             .hash()
                 .numOwners(2)
                 .numSegments(128)
